@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:lottie/lottie.dart';
 
 class Donetaskes extends StatefulWidget {
@@ -17,45 +17,107 @@ class _DonetaskesState extends State<Donetaskes> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Done Taskes"),
+        title: const Text("Done Tasks"),
         centerTitle: true,
-        backgroundColor: Color(0xff9061BF),
-      ),
-      body: (DoneBox.isEmpty)
-          ? Center(
-        child: Lottie.asset(
-          'assets/Empty.json', // عرض الرسوم المتحركة عند عدم وجود مهام منجزة
-          width: 350,
-          height: 350,
-          fit: BoxFit.fill,
-        ),
-      )
-          : ListView.builder(
-        itemCount: DoneBox.length,
-        itemBuilder: (BuildContext context, int index) {
-          var currentTask = Map<String, dynamic>.from(DoneBox.getAt(index));
-          return Card(
-            child: ListTile(
-              title: Text(currentTask["task"]),
-              subtitle: Text(currentTask["Description"]),
-              trailing: IconButton(
-                icon: Icon(Icons.delete),
+        actions: [
+          ValueListenableBuilder(
+            valueListenable: DoneBox.listenable(),
+            builder: (context, Box box, _) {
+              if (box.isEmpty) return const SizedBox.shrink();
+              return IconButton(
+                icon: const Icon(Icons.delete_sweep),
+                tooltip: "Clear All",
                 onPressed: () {
-                  DoneBox.deleteAt(index);
-                  setState(() {});
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text("Clear All Tasks"),
+                      content: const Text("Are you sure you want to delete all completed tasks?"),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text("Cancel"),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            DoneBox.clear();
+                            Navigator.pop(context);
+                          },
+                          child: const Text("Delete", style: TextStyle(color: Colors.red)),
+                        ),
+                      ],
+                    ),
+                  );
                 },
+              );
+            },
+          ),
+        ],
+      ),
+      body: ValueListenableBuilder(
+        valueListenable: DoneBox.listenable(),
+        builder: (context, Box box, _) {
+          if (box.isEmpty) {
+            return Center(
+              child: Lottie.asset(
+                'assets/Empty.json',
+                width: 250,
+                height: 250,
+                fit: BoxFit.contain,
               ),
-              leading: Checkbox(
-                value: currentTask["isDone"] ?? false,
-                onChanged: (value) {
-                  setState(() {
-                    currentTask["isDone"] = value!;
-                    taskBox.add(currentTask);
-                    DoneBox.deleteAt(index);
-                  });
-                },
-              ),
-            ),
+            );
+          }
+
+          return ListView.separated(
+            padding: const EdgeInsets.all(16),
+            itemCount: box.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 8),
+            itemBuilder: (context, index) {
+              var currentTask = Map<String, dynamic>.from(box.getAt(index));
+
+              return Card(
+                elevation: 1.5,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                  leading: Checkbox(
+                    value: currentTask["isDone"] ?? true,
+                    activeColor: const Color(0xff6C5CE7),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                    onChanged: (value) {
+                      setState(() {
+                        currentTask["isDone"] = false;
+                        taskBox.add(currentTask);
+                        DoneBox.deleteAt(index);
+                      });
+                    },
+                  ),
+                  title: Text(
+                    currentTask["task"] ?? "",
+                    style: const TextStyle(
+                      decoration: TextDecoration.lineThrough,
+                      color: Colors.grey,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  subtitle: Text(
+                    currentTask["Description"] ?? "",
+                    style: const TextStyle(
+                      decoration: TextDecoration.lineThrough,
+                      color: Colors.grey,
+                    ),
+                  ),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                    onPressed: () {
+                      DoneBox.deleteAt(index);
+                    },
+                  ),
+                ),
+              );
+            },
           );
         },
       ),

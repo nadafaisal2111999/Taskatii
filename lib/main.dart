@@ -1,42 +1,56 @@
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:pro9/screens/HomeScreen.dart';
+import 'screens/HomeScreen.dart';
 
-// 1. تعريف المتغير المسؤول عن التبديل بين الثيمات (خارج الكلاس)
 ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.light);
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized(); /*سطر نحطو عشان نستخدم اللوكل بيز*/
-  await Hive.initFlutter(); /* تشغيل مكتبة Hive */
-  await Hive.openBox("taskati"); // فتح صندوق البيانات
+  WidgetsFlutterBinding.ensureInitialized();
+  await Hive.initFlutter();
+  await Hive.openBox("taskati");
   await Hive.openBox("DoneBox");
   await Hive.openBox("userBox");
-  runApp(const MyApp());
+  runApp(const TaskatiiApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class TaskatiiApp extends StatelessWidget {
+  const TaskatiiApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // 2. استخدام ValueListenableBuilder لمراقبة التغيير في الثيم
     return ValueListenableBuilder<ThemeMode>(
       valueListenable: themeNotifier,
       builder: (context, currentMode, child) {
         return MaterialApp(
-          title: 'Flutter Demo',
+          title: 'Taskatii',
           debugShowCheckedModeBanner: false,
-          home: const Homescreen(),
-
-          // 3. ربط وضع الثيم الحالي بالمتغير
           themeMode: currentMode,
 
-          // الثيم الفاتح العادي
-          theme: ThemeData.light(),
+          theme: ThemeData(
+            useMaterial3: true,
+            brightness: Brightness.light,
+            colorSchemeSeed: const Color(0xff6C5CE7),
+            scaffoldBackgroundColor: const Color(0xffF8F9FA),
+            appBarTheme: const AppBarTheme(
+              backgroundColor: Color(0xff6C5CE7),
+              foregroundColor: Colors.white,
+              elevation: 0,
+            ),
+          ),
 
-          // الثيم الداكن (Dark Mode)
-          darkTheme: ThemeData.dark(),
+          darkTheme: ThemeData(
+            useMaterial3: true,
+            brightness: Brightness.dark,
+            colorSchemeSeed: const Color(0xff6C5CE7),
+            scaffoldBackgroundColor: const Color(0xff121212),
+            appBarTheme: const AppBarTheme(
+              backgroundColor: Color(0xff1F1F1F),
+              foregroundColor: Colors.white,
+              elevation: 0,
+            ),
+          ),
+
+          home: const HomeScreen(),
         );
       },
     );

@@ -11,22 +11,20 @@ class Userscreen extends StatefulWidget {
 }
 
 class _UserscreenState extends State<Userscreen> {
-  // 1. فتح صندوق بيانات المستخدم
   var userBox = Hive.box("userBox");
+  var taskBox = Hive.box("taskati");
+  var doneBox = Hive.box("DoneBox");
 
-  // تعريف المتغيرات اللي كان الخطأ بسببها
   late TextEditingController nameController;
   String? imagePath;
 
   @override
   void initState() {
     super.initState();
-    // جلب البيانات القديمة عند فتح الشاشة
     nameController = TextEditingController(text: userBox.get('name') ?? '');
     imagePath = userBox.get('image');
   }
 
-  // 2. دالة فتح استوديو الموبايل واختيار الصورة
   Future<void> pickImage() async {
     final ImagePicker picker = ImagePicker();
     final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
@@ -44,93 +42,122 @@ class _UserscreenState extends State<Userscreen> {
     super.dispose();
   }
 
+  Widget _buildStatCard(String title, String count, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Column(
+        children: [
+          Text(
+            count,
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: color),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            title,
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    int pendingCount = taskBox.length;
+    int completedCount = doneBox.length;
+    int totalCount = pendingCount + completedCount;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text("User Screen"),
+        title: const Text("Profile & Analytics"),
         centerTitle: true,
-        backgroundColor: const Color(0xff9061BF),
       ),
-      body: Padding(
-    padding: const EdgeInsets.all(20.0),
-    child: SingleChildScrollView(
-    child: Column(
-    children: [
-    const SizedBox(height: 20),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          children: [
+            Stack(
+              alignment: Alignment.bottomRight,
+              children: [
+                CircleAvatar(
+                  radius: 55,
+                  backgroundColor: const Color(0xff6C5CE7).withOpacity(0.15),
+                  backgroundImage: imagePath != null ? FileImage(File(imagePath!)) : null,
+                  child: imagePath == null
+                      ? const Icon(Icons.person, size: 65, color: Color(0xff6C5CE7))
+                      : null,
+                ),
+                InkWell(
+                  onTap: pickImage,
+                  child: const CircleAvatar(
+                    radius: 16,
+                    backgroundColor: Color(0xff6C5CE7),
+                    child: Icon(Icons.camera_alt, size: 16, color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
 
-    // 1. صورة البروفايل المعروضة جوه دايرة مع آيكونة الكاميرا
-    Stack(
-    alignment: Alignment.bottomRight, // تحديد مكان زرار الكاميرا في أسفل يمين الصورة
-    children: [
-    CircleAvatar(
-    radius: 65,
-    backgroundColor: const Color(0xffDEB9FF),
-    // لو في صورة اختارها بنعرضها، لو مفيش بنعرض آيكونة الشخص
-    backgroundImage: imagePath != null
-    ? FileImage(File(imagePath!)) as ImageProvider // لو في صورة اختارها بنعرضها
-        : null, // لو مفيش بنعرض آيكونة الشخص
-    child: imagePath == null
-    ? const Icon(Icons.person, size: 70, color: Colors.white)
-        : null,
-    ),
-    // زرار الكاميرا الصغير اللي لما بنضغط عليه ينادي دالة pickImage
-    InkWell(
-    onTap: pickImage,
-    child: const CircleAvatar(
-    radius: 18,
-    backgroundColor: Color(0xff9061BF),
-    child: Icon(Icons.camera_alt, size: 18, color: Colors.white),
-    ),
-    ),
-    ],
-    ),
+            const SizedBox(height: 24),
 
-    const SizedBox(height: 30),
+            // User Analytics Dashboard
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Expanded(child: _buildStatCard("Total Tasks", "$totalCount", const Color(0xff6C5CE7))),
+                const SizedBox(width: 8),
+                Expanded(child: _buildStatCard("Completed", "$completedCount", Colors.green)),
+                const SizedBox(width: 8),
+                Expanded(child: _buildStatCard("Pending", "$pendingCount", Colors.orange)),
+              ],
+            ),
 
-    // 2. خانة كتابة اسم المستخدم
-    TextField(
-    controller: nameController,
-    decoration: InputDecoration(
-    labelText: "User Name",
-    hintText: "Enter your name",
-    prefixIcon: const Icon(Icons.person, color: Color(0xff9061BF)),
-    border: OutlineInputBorder(
-    borderRadius: BorderRadius.circular(12),
-    ),
-    ),
-    ),
+            const SizedBox(height: 30),
 
-    const SizedBox(height: 30),
+            TextField(
+              controller: nameController,
+              decoration: InputDecoration(
+                labelText: "User Name",
+                prefixIcon: const Icon(Icons.person, color: Color(0xff6C5CE7)),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
 
-    // 3. زرار حفظ البيانات في Hive
-    ElevatedButton(
-    onPressed: () {
-    // حفظ البيانات
-    userBox.put('name', nameController.text);
-    userBox.put('image', imagePath);
+            const SizedBox(height: 24),
 
-    // إظهار رسالة نفيح بنجاح الحفظ
-    ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(
-    content: Text("Profile Saved Successfully!"),
-    backgroundColor: Colors.green,
-    ),
-    );
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton(
+                onPressed: () {
+                  userBox.put('name', nameController.text);
+                  userBox.put('image', imagePath);
 
-    Navigator.pop(context); // الرجوع للشاشة الرئيسية
-    },
-    style: ElevatedButton.styleFrom(
-    backgroundColor: const Color(0xff9061BF),
-    foregroundColor: Colors.white,
-    fixedSize: Size(MediaQuery.of(context).size.width, 45),
-    ),
-    child: const Text("Save Profile", style: TextStyle(fontSize: 16)),
-    ),
-    ],
-    ),
-    ),
-    ),
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Profile Saved Successfully!"),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+
+                  Navigator.pop(context);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xff6C5CE7),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: const Text("Save Profile", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

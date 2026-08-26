@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
+import 'package:intl/intl.dart';
 
 class AddTask extends StatefulWidget {
-  const AddTask({super.key,  this.task,  this.Description,  this.index});
+  const AddTask({super.key, this.task, this.Description, this.index});
 
   final String? task;
-  final String ?Description;
+  final String? Description;
   final int? index;
 
   @override
@@ -14,106 +15,159 @@ class AddTask extends StatefulWidget {
 
 class _AddTaskState extends State<AddTask> {
   var Task = Hive.box("taskati");
-late TextEditingController TaskControler;
-late TextEditingController DescriptionControler;
-  var FormKey = GlobalKey<FormState>(); // مفتاح النموذج للتحقق من صحة البيانات
+  late TextEditingController TaskControler;
+  late TextEditingController DescriptionControler;
+  late TextEditingController DateControler;
 
-  //important
+  String selectedPriority = "Medium";
+  var FormKey = GlobalKey<FormState>();
 
   @override
-  void initState() { //داله initState() هي دالة في Flutter تُستخدم لتهيئة الحالة الأولية للعنصر (widget) قبل أن يتم عرضه على الشاشة. يتم استدعاؤها مرة واحدة عند إنشاء العنصر، وتُستخدم عادةً لإعداد المتغيرات، أو تهيئة عناصر التحكم، أو تنفيذ أي إعدادات أولية أخرى.
+  void initState() {
     super.initState();
-    TaskControler = TextEditingController(text: widget.task ?? ""); //يمرر قيمة النص الافتراضية إلى عنصر التحكم في النص (TextEditingController) بناءً على القيمة المرسلة من العنصر (widget). إذا كانت القيمة المرسلة غير موجودة (null)، سيتم استخدام سلسلة فارغة كقيمة افتراضية.
+    TaskControler = TextEditingController(text: widget.task ?? "");
     DescriptionControler = TextEditingController(text: widget.Description ?? "");
+    DateControler = TextEditingController(
+      text: DateFormat('dd MMM, yyyy').format(DateTime.now()),
+    );
+
+    if (widget.index != null) {
+      var currentTask = Task.getAt(widget.index!);
+      selectedPriority = currentTask['priority'] ?? "Medium";
+    }
   }
+
   @override
   void dispose() {
     TaskControler.dispose();
     DescriptionControler.dispose();
+    DateControler.dispose();
     super.dispose();
   }
 
-
+  Future<void> _selectDate() async {
+    DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2030),
+    );
+    if (picked != null) {
+      setState(() {
+        DateControler.text = DateFormat('dd MMM, yyyy').format(picked);
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    bool isEditing = widget.index != null;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text("Add Task"),
+        title: Text(isEditing ? "Edit Task" : "Add Task"),
         centerTitle: true,
-        backgroundColor: Color(0xff9061BF),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20.0),
         child: Form(
           key: FormKey,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              SizedBox(height: 20),
               TextFormField(
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return "please Enter Task Title";
-                  }
-                  return null;
-                },
                 controller: TaskControler,
+                validator: (value) => value!.isEmpty ? "Please enter task title" : null,
                 decoration: InputDecoration(
-                  hintText: "Enter Task Title",
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+                  labelText: "Task Title",
+                  prefixIcon: const Icon(Icons.title, color: Color(0xff6C5CE7)),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
               ),
-              SizedBox(height: 20),
+
+              const SizedBox(height: 20),
+
               TextFormField(
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return "please Enter Task Description";
-                  }
-                  return null;
-                },
                 controller: DescriptionControler,
+                maxLines: 3,
+                validator: (value) => value!.isEmpty ? "Please enter task description" : null,
                 decoration: InputDecoration(
-                  hintText: "Enter Task Description",
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
+                  labelText: "Description",
+                  prefixIcon: const Icon(Icons.description, color: Color(0xff6C5CE7)),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              TextFormField(
+                controller: DateControler,
+                readOnly: true,
+                onTap: _selectDate,
+                decoration: InputDecoration(
+                  labelText: "Task Date",
+                  prefixIcon: const Icon(Icons.calendar_today, color: Color(0xff6C5CE7)),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              DropdownButtonFormField<String>(
+                value: selectedPriority,
+                decoration: InputDecoration(
+                  labelText: "Task Priority",
+                  prefixIcon: const Icon(Icons.flag, color: Color(0xff6C5CE7)),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                items: ['High', 'Medium', 'Low'].map((priority) {
+                  return DropdownMenuItem(
+                    value: priority,
+                    child: Text(priority),
+                  );
+                }).toList(),
+                onChanged: (val) {
+                  setState(() {
+                    selectedPriority = val!;
+                  });
+                },
+              ),
+
+              const SizedBox(height: 30),
+
+              SizedBox(
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: () {
+                    if (FormKey.currentState!.validate()) {
+                      var data = {
+                        "task": TaskControler.text,
+                        "Description": DescriptionControler.text,
+                        "date": DateControler.text,
+                        "priority": selectedPriority,
+                        "isDone": false,
+                      };
+
+                      if (isEditing) {
+                        Task.putAt(widget.index!, data);
+                      } else {
+                        Task.add(data);
+                      }
+
+                      Navigator.pop(context);
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xff6C5CE7),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: Text(
+                    isEditing ? "Edit Task" : "Add Task",
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  // 1. التأكد إن الخانات مش فاضية ومكتوب فيها بيانات صحيحة
-                  if (FormKey.currentState!.validate()) {
-
-                    // 2. تجميع البيانات الجديدة من الخانات جوه Map
-                    var data = {
-                      "task": TaskControler.text,
-                      "Description": DescriptionControler.text,
-                      "isDone": false,
-                    };
-
-                    // 3. اختبار حالة الشاشة: هل مبعوث لها index؟
-                    if (widget.index != null) {
-                      // إذا كان الـ index موجود، يبقى العملية تعديل (نستبدل البيانات القديمة في نفس المكان)
-                      Task.putAt(widget.index!, data);
-                    } else {
-                      // إذا كان الـ index بـ null، يبقى العملية إضافة عنصر جديد للقائمة
-                      Task.add(data);
-                    }
-
-                    // 4. إغلاق شاشة الإضافة/التعديل والرجوع للشاشة الرئيسية
-                    Navigator.pop(context);
-                  }
-                },
-                child: widget.index != null?Text("Edit Task"):Text("Add Task"),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xff9061BF),
-                  foregroundColor: Colors.white,
-                  fixedSize: Size(MediaQuery.of(context).size.width, 30),
-                ),
-              )
             ],
           ),
         ),
