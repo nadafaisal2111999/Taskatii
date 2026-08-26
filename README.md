@@ -1,41 +1,44 @@
-# 📝 Taskatii - Task Management App
+# 📝 Taskatii - Task Management & Productivity App
 
-**Taskatii** is a Flutter-based task management application designed to help users organize their daily routines efficiently. It features task categorization, completion tracking, profile personalization, and local data persistence.
-
----
-
-## ✨ Features
-
-* **Task Management:** Create, organize, and manage daily tasks effortlessly.
-* **Task Completion:** Mark tasks as completed and view finished items separately.
-* **User Profile & Personalization:** Set user details and application themes.
-* **Local Persistence:** Powered by **Hive** fast local database for seamless offline access.
-* **Interactive UI:** Smooth transitions and UI animation effects powered by **Lottie**.
+**Taskatii** is a clean, intuitive, and modern mobile application built with **Flutter** to help users manage their daily tasks efficiently, track completed goals, and organize their schedules seamlessly.
 
 ---
 
 ## 📸 Screenshots
 
-| Screen 1 | Screen 2 | Screen 3 | Screen 4 | Screen 5 | Screen 6 | Screen 7 |
-| :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| <img src="https://github.com/user-attachments/assets/6bb1b844-a942-4a61-ba96-efcfcd85bd2e" width="150"/> | <img src="https://github.com/user-attachments/assets/99b5dcc3-c7da-4c13-999c-4e2652ad3516" width="150"/> | <img src="https://github.com/user-attachments/assets/13278426-c9fc-428b-9f68-3b3ae9287ac5" width="150"/> | <img src="https://github.com/user-attachments/assets/cd17db34-fd6b-4012-a8b9-476157c02287" width="150"/> | <img src="https://github.com/user-attachments/assets/60036a8e-423b-460c-b861-017558a6af25" width="150"/> | <img src="https://github.com/user-attachments/assets/fd6804f3-ee37-4e46-9ab2-1523b6010eca" width="150"/> | <img src="https://github.com/user-attachments/assets/e8f96287-fe06-4484-86e5-d087f8cb04bd" width="150"/> |
+| Home & Dark Mode | Add Task & Profile | Customization |
+| :---: | :---: | :---: |
+| <img src="https://github.com/user-attachments/assets/8817c111-663d-45dc-bc72-d081829f75fe" width="220"/> <img src="https://github.com/user-attachments/assets/ef96f026-368a-45bf-a75c-b7c8edb9cd36" width="220"/> | <img src="https://github.com/user-attachments/assets/c8298370-de9d-4b0f-b289-25a5f648eeed" width="220"/> <img src="https://github.com/user-attachments/assets/a5e2c0b3-e6d6-47db-a2aa-c7c24fb3168f" width="220"/> | <img src="https://github.com/user-attachments/assets/c1c0692b-cc1b-4fe6-9e51-7d47309a0fb1" width="220"/> <img src="https://github.com/user-attachments/assets/2ad58e84-6e22-46e8-a973-98813f2b9218" width="220"/> |
 
 ---
 
-## 🛠️ Tech Stack & Packages
+## ✨ Features
 
-* **Framework:** [Flutter](https://flutter.dev/)
-* **Language:** [Dart](https://dart.dev/)
-* **Local Database:** `hive`, `hive_flutter`
-* **Animations:** `lottie`
-* **Launcher Icons:** `flutter_launcher_icons`
+* 📌 **Task Management:** Create, view, and organize daily tasks easily.
+* 👤 **User Profile & Customization:** Personalize your profile with custom user name and profile picture from the device gallery.
+* 💾 **Local Data Persistence:** Instant local saving of tasks and user preferences using **Hive**.
+* 🌓 **Dark & Light Mode:** Seamless toggle between Dark Mode and Light Mode for optimal viewing experience.
+* ✅ **Completed Tasks Tracking:** Dedicated section to view completed tasks (`Done Tasks`).
+* 🖼️ **Image Picker Integration:** Select and save profile images using `image_picker`.
 
 ---
 
-## 🚀 Getting Started
+## 🛠️ Tech Stack & Architecture
 
-To run this project locally, follow these steps:
+* **Framework:** [Flutter](https://flutter.dev/) (Dart)
+* **Local Database:** [Hive](https://pub.dev/packages/hive) & [Hive Flutter](https://pub.dev/packages/hive_flutter)
+* **Image Selection:** [Image Picker](https://pub.dev/packages/image_picker)
+* **State Management:** `StatefulWidget` & `ValueNotifier` for theme switching
 
-1. **Clone the repository:**
-   ```bash
-   git clone [https://github.com/nadafaisal2111999/APPTaskaty.git](https://github.com/nadafaisal2111999/APPTaskaty.git)
+---
+
+## 📁 Project Structure
+
+```text
+lib/
+ ├── main.dart             # App entry point & Hive initialization
+ └── screens/
+      ├── HomeScreen.dart   # Main tasks dashboard & navigation
+      ├── userScreen.dart   # Profile settings & picture selection
+      ├── Add_Task.dart     # Interface to create new tasks
+      └── DoneTaskes.dart   # Archive of completed tasks
