@@ -24,7 +24,7 @@ class _DonetaskesState extends State<Donetaskes> {
       body: (DoneBox.isEmpty)
           ? Center(
         child: Lottie.asset(
-          'assets/Empty.json',
+          'assets/Empty.json', // عرض الرسوم المتحركة عند عدم وجود مهام منجزة
           width: 350,
           height: 350,
           fit: BoxFit.fill,
